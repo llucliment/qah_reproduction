@@ -1,0 +1,10 @@
+{
+    "name": "pruned_4layer",
+    "model": "checkpoints/pruned",
+    "transformer_layers": 4,
+    "parameters": 16546560,
+    "validation_examples": 500,
+    "validation_tokens": 62796,
+    "cross_entropy": 6.068640734687855,
+    "perplexity": 432.092953262621
+}

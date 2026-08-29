@@ -1,0 +1,10 @@
+{
+    "name": "recovered_4layer",
+    "model": "checkpoints/recovered",
+    "transformer_layers": 4,
+    "parameters": 16546560,
+    "validation_examples": 500,
+    "validation_tokens": 62796,
+    "cross_entropy": 3.683288879941714,
+    "perplexity": 39.77700096025746
+}
