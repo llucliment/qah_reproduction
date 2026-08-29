@@ -1,6 +1,6 @@
 {
-    "name": "qat_fake_int4",
-    "base_model": "checkpoints/qat",
+    "name": "qad_fake_int4",
+    "base_model": "checkpoints/qad",
     "transformer_layers": 4,
     "parameters": 16546560,
     "quantization": "symmetric per-tensor fake INT4",
@@ -10,6 +10,6 @@
     ],
     "validation_examples": 500,
     "validation_tokens": 62796,
-    "cross_entropy": 3.633476050425976,
-    "perplexity": 37.84413637427023
+    "cross_entropy": 3.752026262659352,
+    "perplexity": 42.60732823000365
 }
