@@ -1,0 +1,10 @@
+{
+    "model": "teacher_8layer",
+    "model_name": "roneneldan/TinyStories-8M",
+    "parameters": 19702528,
+    "validation_stories": 500,
+    "validation_tokens": 62796,
+    "max_length": 128,
+    "cross_entropy": 1.439716913985389,
+    "perplexity": 4.219501166141287
+}
