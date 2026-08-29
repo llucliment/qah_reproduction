@@ -14,10 +14,17 @@ from quantization import apply_fake_int4
 # Configuration
 # ---------------------------------------------------------
 
-MODEL_PATH = "checkpoints/recovered"
 VALIDATION_PATH = "data/tokenized_validation"
 
+# Evaluate the weights learned by PTQ
+'''
+MODEL_PATH = "checkpoints/recovered"
 RESULTS_PATH = "results/ptq.json"
+'''
+
+# Evaluate the weights learned by QAT.
+MODEL_PATH = "checkpoints/qat"
+RESULTS_PATH = "results/qat.json"
 
 BATCH_SIZE = 4
 DEVICE = "cpu"
