@@ -1,0 +1,15 @@
+{
+    "name": "ptq_fake_int4",
+    "base_model": "checkpoints/recovered",
+    "transformer_layers": 4,
+    "parameters": 16546560,
+    "quantization": "symmetric per-tensor fake INT4",
+    "quantized_linear_layers": 24,
+    "excluded_modules": [
+        "lm_head"
+    ],
+    "validation_examples": 500,
+    "validation_tokens": 62796,
+    "cross_entropy": 4.400535198235726,
+    "perplexity": 81.49447269353473
+}
