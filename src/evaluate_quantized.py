@@ -29,8 +29,14 @@ RESULTS_PATH = "results/qat.json"
 '''
 
 # Evaluate the weights learned by QAD.
+'''
 MODEL_PATH = "checkpoints/qad"
 RESULTS_PATH = "results/qad.json"
+'''
+
+# Evaluate the weights learned by QAH.
+MODEL_PATH = "checkpoints/qah"
+RESULTS_PATH = "results/qah.json"
 
 BATCH_SIZE = 4
 DEVICE = "cpu"
