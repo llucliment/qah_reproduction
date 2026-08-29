@@ -1,0 +1,20 @@
+# Downloaded/generated datasets
+data/
+
+# Model checkpoints
+checkpoints/
+
+# Cached teacher logits
+cache/
+
+# Python
+__pycache__/
+*.pyc
+
+# Virtual environments
+.venv/
+venv/
+
+# IDE
+.vscode/
+.idea/
