@@ -30,7 +30,7 @@ BATCH_SIZE = 2
 LEARNING_RATE = 1e-5
 
 # Start small to verify that the QAT pipeline works.
-NUM_STEPS = 100
+NUM_STEPS = 200
 
 # Evaluate fake-INT4 validation performance every N steps.
 EVAL_EVERY = 20
@@ -313,8 +313,23 @@ history = [
 
 
 # ---------------------------------------------------------
+# Track best checkpoint
+# ---------------------------------------------------------
+
+# Lowest validation perplexity seen so far.
+best_val_ppl = initial_ppl
+
+# Step where the best perplexity occurred.
+best_step = 0
+
+
+# ---------------------------------------------------------
 # QAT training loop
 # ---------------------------------------------------------
+
+print("\nStarting QAT...\n")
+
+step = 0
 
 print("\nStarting QAT...\n")
 
@@ -406,6 +421,10 @@ while step < NUM_STEPS:
         # Periodic validation
         # -------------------------------------------------
 
+        # -------------------------------------------------
+        # Periodic validation
+        # -------------------------------------------------
+
         if (
             step % EVAL_EVERY == 0
             or step == NUM_STEPS
@@ -426,14 +445,44 @@ while step < NUM_STEPS:
                 f"{val_ppl:.4f}"
             )
 
-            history.append(
-                {
-                    "step": step,
-                    "train_ce": loss.item(),
-                    "validation_ce": val_ce,
-                    "validation_ppl": val_ppl,
-                }
-            )
+
+    # -------------------------------------------------
+    # Save best QAT checkpoint
+    # -------------------------------------------------
+
+    # If validation perplexity improved, save this model.
+    if val_ppl < best_val_ppl:
+
+        best_val_ppl = val_ppl
+        best_step = step
+
+        model.save_pretrained(
+            "checkpoints/qat_best"
+        )
+
+        tokenizer.save_pretrained(
+            "checkpoints/qat_best"
+        )
+
+        print(
+            f"          New best checkpoint! "
+            f"Step {best_step}, "
+            f"PPL = {best_val_ppl:.4f}"
+        )
+
+
+    # -------------------------------------------------
+    # Save validation metrics
+    # -------------------------------------------------
+
+    history.append(
+        {
+            "step": step,
+            "train_ce": loss.item(),
+            "validation_ce": val_ce,
+            "validation_ppl": val_ppl,
+        }
+    )
 
 
 # ---------------------------------------------------------
@@ -498,4 +547,18 @@ print("\nQAT complete.")
 print(
     "Important: checkpoints/qat stores FP32 latent weights. "
     "Apply fake INT4 again when evaluating it."
+)
+
+# ---------------------------------------------------------
+# Print best result
+# ---------------------------------------------------------
+
+print(
+    f"\nBest validation PPL: "
+    f"{best_val_ppl:.4f}"
+)
+
+print(
+    f"Best step: "
+    f"{best_step}"
 )

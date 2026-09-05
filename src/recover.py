@@ -21,8 +21,8 @@ STUDENT_MODEL = "checkpoints/pruned"
 TRAIN_DATA_PATH = "data/tokenized_train"
 VAL_DATA_PATH = "data/tokenized_validation"
 
-OUTPUT_DIR = "checkpoints/recovered"
-HISTORY_PATH = "results/recovery_history.csv"
+OUTPUT_DIR = "checkpoints/recovered_best"
+HISTORY_PATH = "results/recovery_history_best.csv"
 
 DEVICE = "cpu"
 
@@ -30,7 +30,7 @@ BATCH_SIZE = 2
 LEARNING_RATE = 1e-5
 
 # Start with 100 steps as a smoke test.
-NUM_STEPS = 100
+NUM_STEPS = 200
 
 # Evaluate the student every N optimization steps.
 EVAL_EVERY = 20
@@ -384,6 +384,13 @@ history = [
     }
 ]
 
+# ---------------------------------------------------------
+# Track best recovery checkpoint
+# ---------------------------------------------------------
+
+# Step 0 is already evaluated.
+best_val_ppl = initial_ppl
+best_step = 0
 
 # ---------------------------------------------------------
 # Recovery training loop
@@ -493,12 +500,33 @@ while step < NUM_STEPS:
         if (
             step % EVAL_EVERY == 0
             or step == NUM_STEPS
+            or step == 1
         ):
 
             val_ce, val_ppl = evaluate_perplexity(
                 student,
                 val_loader,
             )
+
+            # Guardar mejor checkpoint SOLO después de evaluar.
+            if val_ppl < best_val_ppl:
+
+                best_val_ppl = val_ppl
+                best_step = step
+
+                student.save_pretrained(
+                    "checkpoints/recovered_best"
+                )
+
+                tokenizer.save_pretrained(
+                    "checkpoints/recovered_best"
+                )
+
+                print(
+                    f"          New best checkpoint! "
+                    f"Step {best_step}, "
+                    f"PPL = {best_val_ppl:.4f}"
+                )
 
             print(
                 f"          validation CE:  "
@@ -523,21 +551,6 @@ while step < NUM_STEPS:
 # ---------------------------------------------------------
 # Save recovered student
 # ---------------------------------------------------------
-
-print(
-    f"\nSaving recovered model to: "
-    f"{OUTPUT_DIR}"
-)
-
-student.save_pretrained(
-    OUTPUT_DIR
-)
-
-# Save tokenizer files too so this checkpoint is self-contained.
-tokenizer.save_pretrained(
-    OUTPUT_DIR
-)
-
 
 # ---------------------------------------------------------
 # Save training history

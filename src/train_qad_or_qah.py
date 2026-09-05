@@ -21,11 +21,11 @@ from quantization import apply_fake_int4
 
 TRAIN_DATA_PATH = "data/tokenized_train"
 VAL_DATA_PATH = "data/tokenized_validation"
-STUDENT_MODEL_PATH = "checkpoints/recovered"
+STUDENT_MODEL_PATH = "checkpoints/recovered_best"
 
 # QAD
 '''
-TEACHER_MODEL_PATH = "checkpoints/recovered" # Not quantized version
+TEACHER_MODEL_PATH = "checkpoints/recovered_best" # Not quantized version
 OUTPUT_DIR = "checkpoints/qad"
 HISTORY_PATH = "results/qad_history.csv"
 '''
@@ -41,7 +41,7 @@ BATCH_SIZE = 2
 LEARNING_RATE = 1e-5
 
 # Keep the same training budget as QAT for a fair comparison.
-NUM_STEPS = 100
+NUM_STEPS = 200
 
 # Evaluate every N optimizer steps.
 EVAL_EVERY = 20
@@ -454,7 +454,7 @@ os.makedirs(
 # ---------------------------------------------------------
 
 print(
-    "\nEvaluating fake-INT4 student before QAD..."
+    "\nEvaluating fake-INT4 student before QAD or QAH..."
 )
 
 initial_ce, initial_ppl = evaluate_perplexity(
@@ -488,10 +488,21 @@ history = [
 
 
 # ---------------------------------------------------------
-# QAD training loop
+# Track best checkpoint
 # ---------------------------------------------------------
 
-print("\nStarting QAD...\n")
+# Lowest validation perplexity seen so far.
+best_val_ppl = initial_ppl
+
+# Step where that best perplexity occurred.
+best_step = 0
+
+
+# ---------------------------------------------------------
+# QAH training loop
+# ---------------------------------------------------------
+
+print("\nStarting QAD or QAH...\n")
 
 step = 0
 
@@ -605,10 +616,7 @@ while step < NUM_STEPS:
         # Periodic validation
         # -------------------------------------------------
 
-        if (
-            step % EVAL_EVERY == 0
-            or step == NUM_STEPS
-        ):
+        if (step % EVAL_EVERY == 0 or step == NUM_STEPS):
 
             val_ce, val_ppl = evaluate_perplexity(
                 student,
@@ -626,14 +634,44 @@ while step < NUM_STEPS:
             )
 
 
-            history.append(
-                {
-                    "step": step,
-                    "train_kl": loss.item(),
-                    "validation_ce": val_ce,
-                    "validation_ppl": val_ppl,
-                }
-            )
+    # -----------------------------------------------------
+    # Save best checkpoint
+    # -----------------------------------------------------
+
+    # If this is the best validation PPL seen so far,
+    # save a separate checkpoint.
+    if val_ppl < best_val_ppl:
+
+        best_val_ppl = val_ppl
+        best_step = step
+
+        student.save_pretrained(
+            "checkpoints/qah_best"
+        )
+
+        tokenizer.save_pretrained(
+            "checkpoints/qah_best"
+        )
+
+        print(
+            f"          New best checkpoint! "
+            f"Step {best_step}, "
+            f"PPL = {best_val_ppl:.4f}"
+        )
+
+
+    # -----------------------------------------------------
+    # Save metrics to history
+    # -----------------------------------------------------
+
+    history.append(
+        {
+            "step": step,
+            "train_kl": loss.item(),
+            "validation_ce": val_ce,
+            "validation_ppl": val_ppl,
+        }
+    )
 
 
 # ---------------------------------------------------------
@@ -697,7 +735,17 @@ print(
 print("\nQAD complete.")
 
 print(
-    "Important: checkpoints/qad contains the learned "
+    "Important: checkpoints/qad or checkpoints/qah contains the learned "
     "FP32 latent weights. Apply fake INT4 again during "
-    "evaluation so the model is measured in its QAD setup."
+    "evaluation so the model is measured in its quantized setup."
+)
+
+print(
+    f"\nBest validation PPL: "
+    f"{best_val_ppl:.4f}"
+)
+
+print(
+    f"Best step: "
+    f"{best_step}"
 )
